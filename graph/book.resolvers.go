@@ -6,7 +6,7 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/abisalde/go-bookstore-graphql/ent"
 	"github.com/abisalde/go-bookstore-graphql/graph/internal/model"
@@ -14,27 +14,53 @@ import (
 
 // CreateBook is the resolver for the createBook field.
 func (r *mutationResolver) CreateBook(ctx context.Context, input model.BookInput) (*ent.Book, error) {
-	panic(fmt.Errorf("not implemented: CreateBook - createBook"))
+	return r.client.
+		Book.
+		Create().
+		SetName(input.Name).
+		SetAuthor(input.Author).
+		SetPublication(input.Publication).
+		SaveX(ctx), nil
 }
 
 // UpdateBook is the resolver for the updateBook field.
 func (r *mutationResolver) UpdateBook(ctx context.Context, id string, input model.BookInput) (*ent.Book, error) {
-	panic(fmt.Errorf("not implemented: UpdateBook - updateBook"))
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+	return r.client.Book.
+		UpdateOneID(idInt).
+		SetName(input.Name).
+		SetAuthor(input.Author).
+		SetPublication(input.Publication).
+		Save(ctx)
 }
 
 // DeleteBook is the resolver for the deleteBook field.
 func (r *mutationResolver) DeleteBook(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteBook - deleteBook"))
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return false, err
+	}
+	err = r.client.Book.
+		DeleteOneID(idInt).
+		Exec(ctx)
+	return err == nil, err
 }
 
 // Books is the resolver for the books field.
 func (r *queryResolver) Books(ctx context.Context) ([]*ent.Book, error) {
-	panic(fmt.Errorf("not implemented: Books - books"))
+	return r.client.Book.Query().All(ctx)
 }
 
 // Book is the resolver for the book field.
 func (r *queryResolver) Book(ctx context.Context, id string) (*ent.Book, error) {
-	panic(fmt.Errorf("not implemented: Book - book"))
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, err
+	}
+	return r.client.Book.Get(ctx, idInt)
 }
 
 // Mutation returns MutationResolver implementation.
