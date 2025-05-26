@@ -1,20 +1,32 @@
 package main
 
 import (
+	"context"
 	"log"
-	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
 	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/abisalde/go-bookstore-graphql/config"
 	"github.com/abisalde/go-bookstore-graphql/graph"
+	"github.com/gofiber/adaptor/v2"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
 const defaultPort = "8080"
+
+func LoggingMiddleware(ctx context.Context, next graphql.Resolver) (res interface{}, err error) {
+	rc := graphql.GetFieldContext(ctx)
+	log.Printf("GraphQL: %s.%s called", rc.Object, rc.Field.Name)
+	return next(ctx)
+}
 
 func main() {
 	port := os.Getenv("PORT")
@@ -22,7 +34,18 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	config.Connect()
+	client := config.GetDB()
+
+	bookRepo := graph.NewResolver(client)
+
+	defer client.Close()
+
+	app := fiber.New()
+
+	app.Use(logger.New())
+
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: bookRepo}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
@@ -31,13 +54,25 @@ func main() {
 	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
 
 	srv.Use(extension.Introspection{})
+	srv.Use(extension.FixedComplexityLimit(100))
 	srv.Use(extension.AutomaticPersistedQuery{
 		Cache: lru.New[string](100),
 	})
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+	srv.AroundOperations(func(ctx context.Context, next graphql.OperationHandler) graphql.ResponseHandler {
+		log.Println("GraphQL operation received")
+		return next(ctx)
+	})
+	srv.AroundFields(LoggingMiddleware)
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	// Use adaptor for GraphQL endpoint
+	app.All("/graphql", adaptor.HTTPHandler(srv))
+
+	// Use adaptor for Playground
+	app.Get("/", adaptor.HTTPHandlerFunc(
+		playground.Handler("GraphQL playground", "/graphql"),
+	))
+
+	log.Printf("🚀 Server ready at http://localhost:%s", port)
+	log.Fatal(app.Listen(":" + port))
 }
