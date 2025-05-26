@@ -23,3 +23,17 @@ go.work.sum
 
 # env file
 .env
+
+
+# Ent
+ent/generate.go
+ent/generated/
+
+# Graph
+graph/generated/
+
+# DB
+*.db
+
+# Apple
+.DS_Store
