@@ -21,10 +21,6 @@
 go.work
 go.work.sum
 
-# env file
-.env
-
-
 # Ent
 ent/generate.go
 ent/generated/
@@ -32,8 +28,64 @@ ent/generated/
 # Graph
 graph/generated/
 
-# DB
+# Database files
+/data/
 *.db
+*.sqlite
+*.sqlite3
 
-# Apple
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Binaries
+/bin/
+/bookstore
+/bookstore.exe
+
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dependency directories
+vendor/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+
+# Test output
+coverage.txt
+profile.out
+
+# Ent generated files
+/ent/generate.go
+/ent/generated/
+
+# gqlgen generated files
+/graph/generated/
+/graph/models_gen.go
+
+
+
+# Log files
+*.log
+
+# Binary output
+*.exe
+*.test
+*.out
+
+# Development artifacts
+debug
+tmp/

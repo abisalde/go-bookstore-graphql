@@ -41,7 +41,9 @@ func main() {
 
 	defer client.Close()
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName: "Bookstore",
+	})
 
 	app.Use(logger.New())
 
@@ -63,7 +65,7 @@ func main() {
 		log.Println("GraphQL operation received")
 		return next(ctx)
 	})
-	srv.AroundFields(LoggingMiddleware)
+	// srv.AroundFields(LoggingMiddleware)
 
 	// Use adaptor for GraphQL endpoint
 	app.All("/graphql", adaptor.HTTPHandler(srv))
