@@ -8,16 +8,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.5.26
 )
 
-require (
-	github.com/cpuguy83/go-md2man/v2 v2.0.5 // indirect
-	github.com/mattn/go-sqlite3 v1.14.28
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/urfave/cli/v2 v2.27.6 // indirect
-	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/tools v0.32.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
+require github.com/mattn/go-sqlite3 v1.14.28
 
 require (
 	ariga.io/atlas v0.31.1-0.20250212144724-069be8033e83 // indirect
