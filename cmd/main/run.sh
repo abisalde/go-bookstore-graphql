@@ -1,5 +1,17 @@
 #!/bin/bash
 
+
+# Navigate to project root
+cd "$(dirname "$0")/../../" || exit
+
+# Load .env file if it exists
+if [ -f ".env" ]; then
+  echo "🌱 Loading environment variables from .env"
+  set -o allexport
+  source .env
+  set +o allexport
+fi
+
 # Default values
 PORT=${PORT:-8080}
 ENVIRONMENT=${ENVIRONMENT:-development}
@@ -24,8 +36,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Navigate to project root
-cd "$(dirname "$0")/../../" || exit
+
 
 # Create build directory if it doesn't exist
 mkdir -p "$BUILD_DIR"
