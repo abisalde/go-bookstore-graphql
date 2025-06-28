@@ -42,10 +42,9 @@ func main() {
 	defer client.Close()
 
 	app := fiber.New(fiber.Config{
-		AppName: "Bookstore",
+		AppName:     "Bookstore",
+		ProxyHeader: fiber.HeaderXForwardedFor,
 	})
-
-	app.Use(logger.New())
 
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: bookRepo}))
 
@@ -66,13 +65,19 @@ func main() {
 		return next(ctx)
 	})
 	// srv.AroundFields(LoggingMiddleware)
+	app.Use(logger.New())
 
 	// Use adaptor for GraphQL endpoint
-	app.All("/graphql", adaptor.HTTPHandler(srv))
+	app.All("/graphql", func(c *fiber.Ctx) error {
+		clientIP := c.IP()
+		remoteAddr := c.Context().RemoteAddr().String()
+		log.Printf("GraphQL request from IP: %s, RemoteAddr: %s", clientIP, remoteAddr)
+		return adaptor.HTTPHandler(srv)(c)
+	})
 
 	// Use adaptor for Playground
 	app.Get("/", adaptor.HTTPHandlerFunc(
-		playground.Handler("GraphQL playground", "/graphql"),
+		playground.ApolloSandboxHandler("GraphQL playground", "/graphql"),
 	))
 
 	log.Printf("🚀 Server ready at http://localhost:%s", port)
